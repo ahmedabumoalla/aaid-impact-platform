@@ -28,7 +28,7 @@ export function InvestorEntry() {
   return (
     <div className="investor-entry" dir="rtl">
       <header className="entry-header">
-        <a className="entry-brand" href="/" aria-label="العودة إلى عائد"><img src="/assets/aaid-logo.png" alt="عائد" /></a>
+        <a className="entry-brand" href="/" aria-label="العودة إلى عائد"><img src="/assets/aaid-logo.webp" alt="عائد" decoding="async" /></a>
         <a className="entry-back" href="/"><ArrowRight size={17} /> العودة</a>
       </header>
 
@@ -41,7 +41,7 @@ export function InvestorEntry() {
           </div>
           <div className="entry-growth-visual" aria-hidden="true">
             <span className="growth-arrow"><TrendingUp size={26} /></span>
-            <img src="/assets/aaid-impact-sprout.png" alt="" />
+            <img src="/assets/aaid-impact-sprout.webp" alt="" loading="lazy" decoding="async" />
             <div className="growth-blocks"><span>أثر أكبر</span><span>عائد مستدام</span><span>استدامة العطاء</span></div>
           </div>
         </section>

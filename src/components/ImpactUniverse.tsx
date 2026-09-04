@@ -19,18 +19,20 @@ function spherePoint(index: number, count: number, radius = RADIUS) {
   return new Vector3(Math.cos(angle) * ring * radius, y * radius + CENTER.y, Math.sin(angle) * ring * radius);
 }
 
-function ParticleVolume({ accent, reduced, speed }: { accent: string; reduced: boolean; speed: number }) {
+function ParticleVolume({ accent, reduced, speed, compact }: { accent: string; reduced: boolean; speed: number; compact: boolean }) {
   const cloud = useRef<Group>(null);
   const [surface, volume] = useMemo(() => {
-    const surfaceData = new Float32Array(360 * 3);
-    const volumeData = new Float32Array(220 * 3);
-    for (let i = 0; i < 360; i += 1) surfaceData.set(spherePoint(i, 360, RADIUS * (0.988 + (i % 5) * 0.003)).toArray(), i * 3);
-    for (let i = 0; i < 220; i += 1) {
-      const depth = Math.cbrt(0.12 + (((i * 71) % 220) / 220) * 0.82);
-      volumeData.set(spherePoint(i, 220, RADIUS * depth).toArray(), i * 3);
+    const surfaceCount = compact ? 220 : 360;
+    const volumeCount = compact ? 120 : 220;
+    const surfaceData = new Float32Array(surfaceCount * 3);
+    const volumeData = new Float32Array(volumeCount * 3);
+    for (let i = 0; i < surfaceCount; i += 1) surfaceData.set(spherePoint(i, surfaceCount, RADIUS * (0.988 + (i % 5) * 0.003)).toArray(), i * 3);
+    for (let i = 0; i < volumeCount; i += 1) {
+      const depth = Math.cbrt(0.12 + (((i * 71) % volumeCount) / volumeCount) * 0.82);
+      volumeData.set(spherePoint(i, volumeCount, RADIUS * depth).toArray(), i * 3);
     }
     return [surfaceData, volumeData];
-  }, []);
+  }, [compact]);
   useFrame((_, delta) => { if (!reduced && cloud.current) cloud.current.rotation.y += delta * 0.018 * speed; });
   return (
     <group ref={cloud}>
@@ -63,16 +65,18 @@ function DataStreams({ nodes, reduced, speed }: { nodes: Vector3[]; reduced: boo
   );
 }
 
-function IntelligenceGlobe({ accent, reduced, speed }: { accent: string; reduced: boolean; speed: number }) {
+function IntelligenceGlobe({ accent, reduced, speed, compact }: { accent: string; reduced: boolean; speed: number; compact: boolean }) {
   const globe = useRef<Group>(null);
   const floatingGlobe = useRef<Group>(null);
-  const nodes = useMemo(() => Array.from({ length: 34 }, (_, index) => spherePoint(index, 34, RADIUS * 1.012)), []);
-  const arcs = useMemo(() => Array.from({ length: 20 }, (_, index) => {
+  const nodeCount = compact ? 24 : 34;
+  const arcCount = compact ? 14 : 20;
+  const nodes = useMemo(() => Array.from({ length: nodeCount }, (_, index) => spherePoint(index, nodeCount, RADIUS * 1.012)), [nodeCount]);
+  const arcs = useMemo(() => Array.from({ length: arcCount }, (_, index) => {
     const start = nodes[(index * 5) % nodes.length];
     const end = nodes[(index * 11 + 9) % nodes.length];
     const control = start.clone().add(end).multiplyScalar(0.5).sub(CENTER).normalize().multiplyScalar(RADIUS * (1.04 + (index % 4) * 0.025)).add(CENTER);
     return new QuadraticBezierCurve3(start, control, end).getPoints(26);
-  }), [nodes]);
+  }), [arcCount, nodes]);
   useFrame((state, delta) => {
     if (reduced) return;
     if (globe.current) globe.current.rotation.y += delta * 0.026 * speed;
@@ -89,7 +93,7 @@ function IntelligenceGlobe({ accent, reduced, speed }: { accent: string; reduced
           {arcs.map((points, index) => <Line key={index} points={points} color={index % 7 === 0 ? "#8ceeff" : accent} lineWidth={index % 7 === 0 ? 0.7 : 0.36} transparent opacity={index % 7 === 0 ? 0.42 : 0.2} depthWrite={false} />)}
           {nodes.map((node, index) => <mesh key={index} position={node.toArray()} scale={index % 8 === 0 ? 1.7 : 1}><sphereGeometry args={[0.026, 8, 8]} /><meshBasicMaterial color={index % 6 === 0 ? "#fff" : accent} toneMapped={false} /></mesh>)}
         </group>
-        <ParticleVolume accent={accent} reduced={reduced} speed={speed} />
+        <ParticleVolume accent={accent} reduced={reduced} speed={speed} compact={compact} />
       </group>
       <DataStreams nodes={nodes} reduced={reduced} speed={speed} />
     </>
@@ -152,25 +156,25 @@ function Hud({ accent, reduced }: { accent: string; reduced: boolean }) {
   );
 }
 
-function Scene({ activeIndex, reduced, speed, globeOnly }: { activeIndex: number; reduced: boolean; speed: number; globeOnly: boolean }) {
+function Scene({ activeIndex, reduced, speed, globeOnly, compact }: { activeIndex: number; reduced: boolean; speed: number; globeOnly: boolean; compact: boolean }) {
   const pulse = useRef<Mesh>(null);
   const accent = colors[activeIndex];
   useFrame((state) => { if (!reduced && pulse.current) pulse.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 1.7) * .07); });
   return <>
     <ambientLight intensity={0.24} />
     <hemisphereLight args={["#b8f5ff", "#010716", 0.62]} />
-    <spotLight position={[3.6, 5.4, 4.2]} intensity={38} angle={0.5} penumbra={0.82} color="#d8fbff" castShadow shadow-mapSize={[1024, 1024]} />
+    <spotLight position={[3.6, 5.4, 4.2]} intensity={38} angle={0.5} penumbra={0.82} color="#d8fbff" castShadow={!globeOnly && !compact} shadow-mapSize={[compact ? 512 : 1024, compact ? 512 : 1024]} />
     <pointLight position={[2.4,3.8,3.4]} intensity={18} color={accent} />
     <pointLight position={[-3.2,-.5,2]} intensity={9} color="#1d70ff" />
-    <IntelligenceGlobe accent={accent} reduced={reduced} speed={speed} />
+    <IntelligenceGlobe accent={accent} reduced={reduced} speed={speed} compact={compact} />
     {!globeOnly && <><Processor accent={accent} /><Hud accent={accent} reduced={reduced} /><ContactShadows position={[0, -2.11, 0]} opacity={0.52} scale={6.8} blur={2.7} far={3.1} color="#00030c" /><mesh ref={pulse} position={[0,-1.43,0]}><sphereGeometry args={[.13,20,20]} /><meshBasicMaterial color="#fff" transparent opacity={.95} toneMapped={false} /></mesh></>}
-    <Sparkles count={reduced ? 24 : 48} scale={[6.5,4.9,3.2]} size={1.45} speed={reduced ? 0 : .1} color={accent} opacity={.48} />
+    <Sparkles count={reduced ? 20 : compact ? 30 : 48} scale={[6.5,4.9,3.2]} size={1.45} speed={reduced ? 0 : .1} color={accent} opacity={.48} />
   </>;
 }
 
-export function ImpactUniverse({ activeIndex, speed = 1, globeOnly = false, onReady }: { activeIndex: number; speed?: number; globeOnly?: boolean; onReady?: () => void }) {
-  const reduced = Boolean(useReducedMotion());
+export function ImpactUniverse({ activeIndex, speed = 1, globeOnly = false, paused = false, onReady }: { activeIndex: number; speed?: number; globeOnly?: boolean; paused?: boolean; onReady?: () => void }) {
+  const reduced = Boolean(useReducedMotion()) || paused;
   const narrow = typeof window !== "undefined" && window.matchMedia("(max-width: 780px)").matches;
-  const cameraPosition: [number, number, number] = globeOnly ? [0, .58, narrow ? 10.2 : 5.8] : [0, .08, 8.15];
-  return <Canvas className="impact-canvas" shadows="basic" camera={{ position: cameraPosition, fov:42 }} dpr={[1,1.45]} frameloop={reduced?"demand":"always"} gl={{alpha:true,antialias:true,powerPreference:"high-performance"}} onCreated={onReady}><Scene activeIndex={activeIndex} reduced={reduced} speed={speed} globeOnly={globeOnly} /></Canvas>;
+  const cameraPosition: [number, number, number] = globeOnly ? [0, .88, narrow ? 10.2 : 5.8] : [0, .08, 8.15];
+  return <Canvas className="impact-canvas" shadows={!globeOnly && !narrow ? "basic" : false} camera={{ position: cameraPosition, fov:42 }} dpr={[1, narrow ? 1.12 : 1.35]} frameloop={reduced?"demand":"always"} gl={{alpha:true,antialias:!narrow,powerPreference:"high-performance"}} onCreated={onReady}><Scene activeIndex={activeIndex} reduced={reduced} speed={speed} globeOnly={globeOnly} compact={narrow} /></Canvas>;
 }

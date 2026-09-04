@@ -109,7 +109,7 @@ export function WalletDashboard() {
   return (
     <div className="wallet-page" dir="rtl">
       <header className="wallet-topbar">
-        <a className="wallet-logo" href="/" aria-label="بوابة عائد"><img src="/assets/aaid-logo.png" alt="عائد" /></a>
+        <a className="wallet-logo" href="/" aria-label="بوابة عائد"><img src="/assets/aaid-logo.webp" alt="عائد" decoding="async" /></a>
         <nav aria-label="تنقل المحفظة"><a href="/investor/dashboard">لوحة المستثمر</a><a className="active" href="/wallet">المحفظة</a><a href="#transactions">العمليات</a></nav>
         <a className="wallet-back" href="/investor">العودة للوحة <ChevronLeft size={15} /></a>
       </header>

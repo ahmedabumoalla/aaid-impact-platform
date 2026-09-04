@@ -6,7 +6,7 @@ export function ContributionOpportunityCard({ opportunity }: { opportunity: Cont
   return (
     <article className="contribution-card">
       <div className="contribution-card-image">
-        <img src={opportunity.image} alt={opportunity.imageAlt} loading="lazy" />
+        <img src={opportunity.image} alt={opportunity.imageAlt} loading="lazy" decoding="async" />
         <span className={`contribution-status ${opportunity.status === "متاح" ? "is-available" : "is-funding"}`}>
           {opportunity.status}
         </span>

@@ -7,7 +7,7 @@ export function ContributionOpportunitiesPage() {
     <div className="opportunities-page" dir="rtl">
       <header className="opportunities-page-header">
         <a className="opportunities-page-brand" href="/" aria-label="العودة إلى صفحة عائد الرئيسية">
-          <img src="/assets/aaid-logo.png" alt="عائد" />
+          <img src="/assets/aaid-logo.webp" alt="عائد" decoding="async" />
         </a>
         <span><MapPin size={15} aria-hidden="true" /> الفرص المتاحة في الرياض</span>
         <a className="opportunities-page-back" href="/"><ArrowRight size={15} aria-hidden="true" /> الرئيسية</a>

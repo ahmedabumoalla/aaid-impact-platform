@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
@@ -29,10 +29,6 @@ import {
 } from "motion/react";
 import { calculateImpact, formatSar } from "./lib/impact";
 import { motionTokens, springs } from "./lib/motion-tokens";
-import { InvestorEntry } from "./pages/InvestorEntry";
-import { StartContribution } from "./pages/StartContribution";
-import { InvestorPortal } from "./pages/InvestorPortal";
-import { ContributionOpportunitiesPage } from "./pages/ContributionOpportunitiesPage";
 import { ContributionOpportunityCard } from "./components/ContributionOpportunityCard";
 import { contributionOpportunities } from "./data/contribution-opportunities";
 
@@ -40,6 +36,10 @@ const ease = motionTokens.easing.smooth;
 const ImpactUniverse = lazy(() =>
   import("./components/ImpactUniverse").then((module) => ({ default: module.ImpactUniverse })),
 );
+const InvestorEntry = lazy(() => import("./pages/InvestorEntry").then((module) => ({ default: module.InvestorEntry })));
+const StartContribution = lazy(() => import("./pages/StartContribution").then((module) => ({ default: module.StartContribution })));
+const InvestorPortal = lazy(() => import("./pages/InvestorPortal").then((module) => ({ default: module.InvestorPortal })));
+const ContributionOpportunitiesPage = lazy(() => import("./pages/ContributionOpportunitiesPage").then((module) => ({ default: module.ContributionOpportunitiesPage })));
 
 const journeySteps = [
   {
@@ -95,12 +95,6 @@ const modelSources = [
   { className: "model-source--need", title: "الاحتياج الفعلي", caption: "تحليل المناطق", icon: MapPinned },
 ] as const;
 
-const opportunities = [
-  { type: "أصل سكني", name: "محفظة إسكان الرياض", returnValue: "14.8%", impact: "18 أسرة", risk: "متوازن" },
-  { type: "صندوق أثر", name: "نمو المجتمعات الواعدة", returnValue: "12.4%", impact: "31 أسرة", risk: "محافظ" },
-  { type: "وقف تنموي", name: "وقف المسكن المستدام", returnValue: "10.9%", impact: "44 أسرة", risk: "منخفض" },
-];
-
 const dataParticles = [
   { x: ["1%", "14%", "29%", "43%", "50%"], y: ["14%", "21%", "30%", "40%", "45%"], duration: 8.4, delay: -1.4, size: 7 },
   { x: ["99%", "84%", "70%", "57%", "50%"], y: ["16%", "24%", "31%", "39%", "45%"], duration: 9.1, delay: -5.2, size: 5 },
@@ -125,7 +119,7 @@ function Reveal({ children, className = "", delay = 0, ariaLabel }: { children: 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={{
-        duration: reduceMotion ? motionTokens.duration.fast : motionTokens.duration.slow,
+        duration: reduceMotion ? motionTokens.duration.fast : motionTokens.duration.normal,
         delay: reduceMotion ? 0 : delay,
         ease,
       }}
@@ -138,7 +132,7 @@ function Reveal({ children, className = "", delay = 0, ariaLabel }: { children: 
 function Logo({ light = false }: { light?: boolean }) {
   return (
     <a className={`brand ${light ? "brand--light" : ""}`} href="#top" aria-label="عائد الصفحة الرئيسية">
-      <img src="/assets/aaid-logo.png" alt="عائد" />
+      <img src="/assets/aaid-logo.webp" alt="عائد" decoding="async" />
     </a>
   );
 }
@@ -228,12 +222,12 @@ function Hero() {
             <div className="hero-art-viewport">
               <div className="stage-halo" aria-hidden="true" />
               <div className="scene-window scene-window--showcase">
-                <img className="scene-image scene-image--showcase" src="/assets/aaid-hero-home-premium.png" alt="مسكن تنموي تحيط به مسارات مضيئة ترمز لنمو الأثر" />
+                <img className="scene-image scene-image--showcase" src="/assets/aaid-hero-home-premium.webp" alt="مسكن تنموي تحيط به مسارات مضيئة ترمز لنمو الأثر" fetchPriority="high" decoding="async" />
                 <div className="impact-orb impact-orb--hand" aria-hidden="true">
-                  <img src="/assets/aaid-impact-hand.png" alt="" />
+                  <img src="/assets/aaid-impact-hand.webp" alt="" loading="lazy" decoding="async" />
                 </div>
                 <div className="impact-orb impact-orb--sprout" aria-hidden="true">
-                  <img src="/assets/aaid-impact-sprout.png" alt="" />
+                  <img src="/assets/aaid-impact-sprout.webp" alt="" loading="lazy" decoding="async" />
                 </div>
               </div>
             </div>
@@ -260,14 +254,28 @@ function Hero() {
 
 function Journey() {
   const reduceMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+  const [sceneLoaded, setSceneLoaded] = useState(false);
+  const [sceneVisible, setSceneVisible] = useState(false);
   const [activeId, setActiveId] = useState<(typeof journeySteps)[number]["id"]>("contribute");
   const active = journeySteps.find((step) => step.id === activeId)!;
   const activeIndex = journeySteps.findIndex((step) => step.id === activeId);
   const ActiveIcon = active.icon;
   const progress = (activeIndex + 1) * 25;
 
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setSceneVisible(entry.isIntersecting);
+      if (entry.isIntersecting) setSceneLoaded(true);
+    }, { rootMargin: "320px 0px" });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="journey section" id="journey" aria-labelledby="journey-title">
+    <section ref={sectionRef} className="journey section" id="journey" aria-labelledby="journey-title">
       <div className="shell">
         <Reveal className="section-heading">
           <div>
@@ -337,9 +345,9 @@ function Journey() {
             </AnimatePresence>
             <div className="panel-visual" aria-hidden="true">
               <div className="universe-grid model-grid" />
-              <Suspense fallback={<div className="universe-loading"><span /></div>}>
-                <ImpactUniverse activeIndex={activeIndex} />
-              </Suspense>
+              {sceneLoaded ? <Suspense fallback={<div className="universe-loading"><span /></div>}>
+                <ImpactUniverse activeIndex={activeIndex} paused={!sceneVisible} />
+              </Suspense> : <div className="universe-loading"><span /></div>}
               <svg className="model-connectors" viewBox="0 0 1000 560" preserveAspectRatio="none">
                 <path fill="none" d="M175 118C270 118 310 176 395 205" />
                 <path fill="none" d="M175 444C285 444 330 357 404 318" />
@@ -447,7 +455,7 @@ function Opportunities() {
               animate={pauseEngine ? undefined : { scale: [1, 1.035, 1], x: ["0%", "-.7%", "0%"] }}
               transition={{ duration: motionTokens.duration.crawl * 14, repeat: Infinity, ease }}
             >
-              <img className="engine-image" src="/assets/aaid-analysis-engine.png" alt="" />
+              <img className="engine-image" src="/assets/aaid-analysis-engine.webp" alt="" loading="lazy" decoding="async" />
             </motion.div>
             <div className="engine-vignette" />
             <div className="engine-scanline" />
@@ -489,39 +497,39 @@ function Opportunities() {
           </div>
         </Reveal>
         <Reveal className="opportunity-label">
-          <span><i /> بيانات نموذجية للعرض</span>
+          <span><i /> فرص المساهمة المعتمدة</span>
           <span>تحديث المحرك الآن</span>
         </Reveal>
-        <div className="opportunity-table" role="table" aria-label="نماذج فرص الأثر">
+        <div className="opportunity-table" role="table" aria-label="فرص المساهمة المعتمدة">
           <div className="opportunity-row opportunity-row--head" role="row">
             <span role="columnheader">الفرصة</span>
-            <span role="columnheader">العائد المتوقع</span>
-            <span role="columnheader">الأثر المستهدف</span>
-            <span role="columnheader">ملف المخاطر</span>
+            <span role="columnheader">نسبة التمويل</span>
+            <span role="columnheader">الهدف</span>
+            <span role="columnheader">الحالة</span>
             <span role="columnheader" aria-label="إجراء" />
           </div>
-          {opportunities.map((opportunity, index) => (
+          {contributionOpportunities.map((opportunity, index) => (
             <motion.div
               className="opportunity-row"
               role="row"
-              key={opportunity.name}
+              key={opportunity.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.35 }}
               transition={{ duration: 0.5, delay: index * 0.08, ease }}
             >
-              <span className="opportunity-name" role="cell"><small>{opportunity.type}</small><strong>{opportunity.name}</strong></span>
-              <span className="return-value" role="cell">{opportunity.returnValue}</span>
-              <span role="cell"><Users size={16} aria-hidden="true" /> {opportunity.impact}</span>
-              <span role="cell"><i className={`risk-dot risk-dot--${index}`} /> {opportunity.risk}</span>
-              <button type="button" aria-label={`استعراض ${opportunity.name}`}><ArrowUpLeft size={18} aria-hidden="true" /></button>
+              <span className="opportunity-name" role="cell"><small>{opportunity.subtitle} · {opportunity.district}</small><strong>{opportunity.title}</strong></span>
+              <span className="return-value" role="cell">{opportunity.funded}%</span>
+              <span role="cell">{opportunity.target} ر.س</span>
+              <span role="cell"><i className={`risk-dot ${opportunity.status === "متاح" ? "risk-dot--available" : ""}`} /> {opportunity.status}</span>
+              <a className="opportunity-row-action" href={`/start?opportunity=${encodeURIComponent(opportunity.id)}`} aria-label={`ساهم في ${opportunity.title}`}><ArrowUpLeft size={18} aria-hidden="true" /></a>
             </motion.div>
           ))}
         </div>
         <Reveal className="engine-note" delay={0.08}>
           <Sparkles size={18} aria-hidden="true" />
-          <p><strong>ما الذي يراه محرك عائد</strong> أكثر من 24 عاملًا بين الاستدامة المالية والأثر الاجتماعي والسيولة والمخاطر التنظيمية</p>
-          <a href="#calculator">حلّل أثرك <ArrowLeft size={16} aria-hidden="true" /></a>
+          <p><strong>اختر فرصة مساهمتك</strong> استعرض الفرص السكنية وبرامج الدعم المعتمدة واختر المسار الأقرب للأثر الذي تريد صنعه</p>
+          <a href="/opportunities">استعرض كل الفرص <ArrowLeft size={16} aria-hidden="true" /></a>
         </Reveal>
       </div>
     </section>
@@ -639,14 +647,16 @@ function Footer() {
 
 export default function App() {
   const currentPath = window.location.pathname.replace(/\/+$/, "");
+  const routePage = currentPath === "/investor" ? <InvestorEntry />
+    : currentPath === "/investor/dashboard" ? <InvestorPortal page="overview" />
+      : currentPath === "/wallet" ? <InvestorPortal page="wallet" />
+        : currentPath === "/analysis" || currentPath === "/impact" ? <InvestorPortal page="analysis" />
+          : currentPath === "/documents" || currentPath === "/preferences" ? <InvestorPortal page="overview" />
+            : currentPath === "/start" ? <StartContribution />
+              : currentPath === "/opportunities" ? <ContributionOpportunitiesPage />
+                : null;
 
-  if (currentPath === "/investor") return <InvestorEntry />;
-  if (currentPath === "/investor/dashboard") return <InvestorPortal page="overview" />;
-  if (currentPath === "/wallet") return <InvestorPortal page="wallet" />;
-  if (currentPath === "/analysis" || currentPath === "/impact") return <InvestorPortal page="analysis" />;
-  if (currentPath === "/documents" || currentPath === "/preferences") return <InvestorPortal page="overview" />;
-  if (currentPath === "/start") return <StartContribution />;
-  if (currentPath === "/opportunities") return <ContributionOpportunitiesPage />;
+  if (routePage) return <Suspense fallback={<div className="route-loading" role="status" aria-label="جاري فتح الصفحة"><span /></div>}>{routePage}</Suspense>;
 
   return (
     <>

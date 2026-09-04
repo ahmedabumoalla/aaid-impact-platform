@@ -100,7 +100,7 @@ function DashboardReveal({ children, className = "", delay = 0, id }: { children
 function DashboardLogo() {
   return (
     <a className="investor-brand" href="/" aria-label="العودة إلى بوابة عائد">
-      <img src="/assets/aaid-logo.png" alt="عائد" />
+      <img src="/assets/aaid-logo.webp" alt="عائد" decoding="async" />
     </a>
   );
 }
@@ -192,7 +192,7 @@ export function InvestorDashboard() {
               <a href="#ai-analysis">شاهد كيف يفكر عائد <ArrowLeft size={16} /></a>
             </div>
             <div className="vision-machine" aria-hidden="true">
-              <img src="/assets/aaid-analysis-engine.png" alt="" />
+              <img src="/assets/aaid-analysis-engine.webp" alt="" loading="lazy" decoding="async" />
               <span className="vision-core"><i /><b>AI</b></span>
               <span className="vision-node vision-node--money"><CircleDollarSign size={17} /><b>1.25M</b><small>مساهمات</small></span>
               <span className="vision-node vision-node--asset"><Building2 size={17} /><b>3</b><small>أصول نشطة</small></span>
@@ -244,7 +244,7 @@ export function InvestorDashboard() {
               <div className="ai-factor-map">
                 {aiFactors.map((factor) => <div key={factor.label}><span><b>{factor.label}</b><small>{factor.detail}</small></span><i><motion.em initial={{ scaleX: 0 }} whileInView={{ scaleX: factor.value / 100 }} viewport={{ once: true }} transition={{ duration: .7, ease: motionTokens.easing.smooth }} /></i><strong>{factor.value}</strong></div>)}
               </div>
-              <div className="ai-engine-view" aria-hidden="true"><img src="/assets/aaid-analysis-engine.png" alt="" /><span><Cpu size={20} /><b>6,000+</b><small>سيناريو مقارن</small></span><i className="ai-scan" /></div>
+              <div className="ai-engine-view" aria-hidden="true"><img src="/assets/aaid-analysis-engine.webp" alt="" loading="lazy" decoding="async" /><span><Cpu size={20} /><b>6,000+</b><small>سيناريو مقارن</small></span><i className="ai-scan" /></div>
             </div>
             <div className="scenario-strip">
               <div className="scenario-title"><ScanLine size={18} /><span><strong>محاكاة النتيجة</strong><small>خمسة أعوام</small></span></div>
