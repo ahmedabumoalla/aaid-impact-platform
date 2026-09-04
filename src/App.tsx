@@ -346,7 +346,7 @@ function Journey() {
             <div className="panel-visual" aria-hidden="true">
               <div className="universe-grid model-grid" />
               {sceneLoaded ? <Suspense fallback={<div className="universe-loading"><span /></div>}>
-                <ImpactUniverse activeIndex={activeIndex} speed={1.7} paused={!sceneVisible} />
+                <ImpactUniverse activeIndex={activeIndex} speed={2.2} paused={!sceneVisible} />
               </Suspense> : <div className="universe-loading"><span /></div>}
               <svg className="model-connectors" viewBox="0 0 1000 560" preserveAspectRatio="none">
                 <path fill="none" d="M175 118C270 118 310 176 395 205" />
