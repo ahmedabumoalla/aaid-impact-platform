@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vercel/
+.codex/
+.codex-temp/
+.tmp-video-review/
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.DS_Store
+Thumbs.db
